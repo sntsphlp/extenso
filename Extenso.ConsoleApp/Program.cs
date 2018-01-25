@@ -14,9 +14,9 @@ namespace Extenso.ConsoleApp
 
             Console.WriteLine($"valor informado: {valor}");
 
-            string valorTransformado = EscreverValorPorExtenso(valor);
+            string valorPorExtenso = ObterValorPorExtenso(valor);
 
-            Console.WriteLine($"o valor transformado é: {valorTransformado}");
+            Console.WriteLine($"o valor por extenso é: {valorPorExtenso}");
 
             Console.ReadKey(true);
         }
@@ -30,17 +30,27 @@ namespace Extenso.ConsoleApp
             return new string(caracteres);
         }
 
-        public static string EscreverValorPorExtenso(string valor)
+        public static string ObterValorPorExtenso(string valor)
         {
             string nomePorExtenso = string.Empty;
 
             int digitoUnidade = 0;
             int digitoDezena = 0;
             int digitoCentena = 0;
+            int digitoDecimo = 0;
+            int digitoCentesimo = 0;
 
             if (ValorValido(valor))
             {
-                valor = valor.Split(',')[0];
+                if (valor.Contains("-"))
+                {
+                    valor = valor.Replace("-", string.Empty);
+                    nomePorExtenso += "(menos) ";
+                }
+
+                string[] partesValor = valor.Split(',');
+                valor = partesValor[0];
+                string fracao = partesValor[1];
                 valor = InverterString(valor);
 
                 digitoUnidade = Convert.ToInt32(valor[0].ToString());
@@ -88,13 +98,11 @@ namespace Extenso.ConsoleApp
             string[] partesDoValor = valor.Split(',');
 
             string parteInteiraDoValor = partesDoValor[0];
-            string parteFracionadaDoValor = partesDoValor[1];
 
             bool parteInteiraEhPositiva = int.TryParse(parteInteiraDoValor, out int parteInteira) && parteInteira >= 0;
             bool parteInteiraPossuiAlgarismosAlemDaCentena = parteInteiraEhPositiva && parteInteira > 999;
-            bool parteFracionadaEhMaiorQueZero = int.TryParse(parteFracionadaDoValor, out int parteFracionada) && parteFracionada > 0;
 
-            bool valorValido = parteInteiraEhPositiva && !parteInteiraPossuiAlgarismosAlemDaCentena && !parteFracionadaEhMaiorQueZero;
+            bool valorValido = !parteInteiraPossuiAlgarismosAlemDaCentena;
 
             return valorValido;
         }

@@ -5,6 +5,7 @@ namespace Extenso.ConsoleApp
     public static class Program
     {
         public const string VALOR_INVALIDO = "valor inválido";
+        public const string SINAL_DE_SUBTRACAO = "-";
 
         static void Main(string[] args)
         {
@@ -32,77 +33,145 @@ namespace Extenso.ConsoleApp
 
         public static string ObterValorPorExtenso(string valor)
         {
-            string nomePorExtenso = string.Empty;
-
-            int digitoUnidade = 0;
-            int digitoDezena = 0;
-            int digitoCentena = 0;
-            int digitoDecimo = 0;
-            int digitoCentesimo = 0;
+            string valorPorExtenso = string.Empty;
 
             if (ValorValido(valor))
             {
-                if (valor.Contains("-"))
-                {
-                    valor = valor.Replace("-", string.Empty);
-                    nomePorExtenso += "(menos) ";
-                }
+                valorPorExtenso += ObterParteInteiraDoValorPorExtenso(valor);
 
-                string[] partesValor = valor.Split(',');
-                valor = partesValor[0];
-                string fracao = partesValor[1];
-                valor = InverterString(valor);
-
-                digitoUnidade = Convert.ToInt32(valor[0].ToString());
-
-                switch (valor.Length)
-                {
-                    case 1: nomePorExtenso += ObterUnidade(digitoUnidade); break;
-
-                    case 2:
-                        {
-                            digitoDezena = Convert.ToInt32(valor[1].ToString());
-
-                            nomePorExtenso += ObterDezena(digitoDezena, digitoUnidade);
-                            nomePorExtenso += " e ";
-                            nomePorExtenso += ObterUnidade(digitoUnidade);
-                        }
-                        break;
-
-                    case 3:
-                        {
-                            digitoDezena = Convert.ToInt32(valor[1].ToString());
-                            digitoCentena = Convert.ToInt32(valor[2].ToString());
-
-                            nomePorExtenso += ObterCentena(digitoCentena, digitoDezena, digitoUnidade);
-                            nomePorExtenso += " e ";
-                            nomePorExtenso += ObterDezena(digitoDezena, digitoUnidade);
-                            nomePorExtenso += " e ";
-                            nomePorExtenso += ObterUnidade(digitoUnidade);
-                        }
-                        break;
-
-                    default: break;
-                }
-
-                nomePorExtenso += " real(is)";
+                valorPorExtenso += ObterParteFracionadaDoValorPorExtenso(valor);
             }
             else
                 return VALOR_INVALIDO;
 
-            return nomePorExtenso;
+            return valorPorExtenso;
+        }
+
+        static string ObterParteInteiraDoValorPorExtenso(string valor)
+        {
+            string valorPorExtenso = string.Empty;
+            string parteInteiraStr = string.Empty;
+            int parteInteiraInt = 0;
+
+            int digitoUnidade = 0;
+            int digitoDezena = 0;
+            int digitoCentena = 0;
+
+            if (ValorEhNegativo(valor))
+            {
+                parteInteiraStr = ObterParteInteiraSemSinalDeSubtracao(valor);
+                valorPorExtenso += "(menos) ";
+            }
+            else
+                parteInteiraStr = ObterParteInteira(valor);
+
+            parteInteiraInt = Convert.ToInt32(parteInteiraStr);
+
+            if (parteInteiraInt != 0)
+            {
+                string parteInteiraInvertida = InverterString(parteInteiraStr);
+                parteInteiraInvertida = parteInteiraInvertida.PadRight(3, '0');
+
+                digitoUnidade = Convert.ToInt32(parteInteiraInvertida[0].ToString());
+                digitoDezena = Convert.ToInt32(parteInteiraInvertida[1].ToString());
+                digitoCentena = Convert.ToInt32(parteInteiraInvertida[2].ToString());
+
+                if (parteInteiraInt < 10)
+                {
+                    valorPorExtenso += ObterUnidade(digitoUnidade);
+                }
+                else if (parteInteiraInt < 100)
+                {
+                    valorPorExtenso += ObterDezena(digitoDezena, digitoUnidade);
+
+                    if (parteInteiraInt >= 20 && digitoUnidade != 0)
+                    {
+                        valorPorExtenso += " e ";
+                        valorPorExtenso += ObterUnidade(digitoUnidade);
+                    }
+                }
+                else
+                {
+                    valorPorExtenso += ObterCentena(digitoCentena, digitoDezena, digitoUnidade);
+
+                    if (digitoDezena != 0)
+                    {
+                        valorPorExtenso += " e ";
+                        valorPorExtenso += ObterDezena(digitoDezena, digitoUnidade);
+                    }
+
+                    if (digitoUnidade != 0)
+                    {
+                        valorPorExtenso += " e ";
+                        valorPorExtenso += ObterUnidade(digitoUnidade);
+                    }
+                }
+
+                valorPorExtenso += " real(is)";
+            }
+
+            return valorPorExtenso;
+        }
+
+        static string ObterParteFracionadaDoValorPorExtenso(string valor)
+        {
+            string valorPorExtenso = string.Empty;
+            string parteFracionadaStr = ObterParteFracionada(valor);
+            int parteInteiraInt = 0;
+            string parteInteiraStr = string.Empty;
+            int parteFracionadaInt = 0;
+
+            int digitoDezena = 0;
+            int digitoUnidade = 0;
+
+            parteFracionadaInt = Convert.ToInt32(parteFracionadaStr);
+
+            if (parteFracionadaInt != 0)
+            {
+                parteInteiraStr = ValorEhNegativo(valor) ? ObterParteInteiraSemSinalDeSubtracao(valor) : ObterParteInteira(valor);
+
+                parteInteiraInt = Convert.ToInt32(parteInteiraStr);
+
+                if (parteInteiraInt != 0)
+                    valorPorExtenso += " e ";
+
+                string parteFracionadaInvertida = InverterString(parteFracionadaStr);
+                parteFracionadaInvertida = parteFracionadaInvertida.PadRight(2, '0');
+
+                digitoUnidade = Convert.ToInt32(parteFracionadaInvertida[0].ToString());
+                digitoDezena = Convert.ToInt32(parteFracionadaInvertida[1].ToString());
+
+                if (parteFracionadaInt < 10)
+                {
+                    valorPorExtenso += ObterUnidade(digitoUnidade);
+                }
+                else
+                {
+                    valorPorExtenso += ObterDezena(digitoDezena, digitoUnidade);
+
+                    if (parteFracionadaInt >= 20 && digitoUnidade != 0)
+                    {
+                        valorPorExtenso += " e ";
+                        valorPorExtenso += ObterUnidade(digitoUnidade);
+                    }
+                }
+
+                valorPorExtenso += " centavo(s)";
+            }
+
+            return valorPorExtenso;
         }
 
         static bool ValorValido(string valor)
         {
-            string[] partesDoValor = valor.Split(',');
+            string parteInteira = ObterParteInteira(valor);
 
-            string parteInteiraDoValor = partesDoValor[0];
+            if (ValorEhNegativo(valor))
+                parteInteira = ObterParteInteiraSemSinalDeSubtracao(valor);
 
-            bool parteInteiraEhPositiva = int.TryParse(parteInteiraDoValor, out int parteInteira) && parteInteira >= 0;
-            bool parteInteiraPossuiAlgarismosAlemDaCentena = parteInteiraEhPositiva && parteInteira > 999;
+            bool parteInteiraEhMenorQueMil = Convert.ToInt32(parteInteira) < 1000;
 
-            bool valorValido = !parteInteiraPossuiAlgarismosAlemDaCentena;
+            bool valorValido = parteInteiraEhMenorQueMil;
 
             return valorValido;
         }
@@ -177,6 +246,42 @@ namespace Extenso.ConsoleApp
 
                 default: return string.Empty;
             }
+        }
+
+        static bool ValorEhNegativo(string valor)
+        {
+            string parteInteiraDoValor = ObterParteInteira(valor);
+
+            bool valorEhNegativo = parteInteiraDoValor.Contains(SINAL_DE_SUBTRACAO);
+
+            return valorEhNegativo;
+        }
+
+        static string ObterParteInteiraSemSinalDeSubtracao(string valor)
+        {
+            string parteInteiraDoValor = ObterParteInteira(valor);
+
+            string parteInteiraDoValorSemSinalDeSubtracao = parteInteiraDoValor.Replace(SINAL_DE_SUBTRACAO, string.Empty);
+
+            return parteInteiraDoValorSemSinalDeSubtracao;
+        }
+
+        static string ObterParteInteira(string valor)
+        {
+            string[] partesDoValor = valor.Split(',');
+
+            string parteInteiraDoValor = partesDoValor[0];
+
+            return parteInteiraDoValor;
+        }
+
+        static string ObterParteFracionada(string valor)
+        {
+            string[] partesDoValor = valor.Split(',');
+
+            string parteFracionadaDoValor = partesDoValor[1];
+
+            return parteFracionadaDoValor;
         }
     }
 }
